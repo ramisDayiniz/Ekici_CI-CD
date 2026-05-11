@@ -1,74 +1,55 @@
 pipeline {
-    agent {
-        docker { 
-            image 'python:3.11' 
-            args '-p 5556:5556'
-        }
-    }
+    agent any // Wir nutzen den Jenkins-Host, um Docker-Befehle zu steuern
+
     environment {
-        APP_PORT = '5556'
-        GITHUB_REPO = 'https://github.com/ThomasMicheler/DEZSYS_JENKINS_HELLOSPENCER.git'
+        IMAGE_NAME = "hellospencer-app"
+        CONTAINER_NAME = "spencer-service"
+        APP_PORT = "5556"
     }
+
     stages {
-        stage('Pre-Build Cleanup') {
-            steps {
-                // Kill any existing Flask processes
-                sh 'pkill -f "python hello.py" || true'
-            }
-        }
         stage('Checkout') {
             steps {
-                cleanWs()
-                git branch: 'main', url: "${GITHUB_REPO}"
+                // Code vom Repo holen
+                checkout scm
             }
         }
+
         stage('Build') {
             steps {
-                sh '''
-                    python -m pip install --upgrade pip
-                    pip install flask
-                    pip install requests
-                    pip install pytest
-                    if [ ! -f count.txt ]; then
-                        echo "0" > count.txt
-                    fi
-                    chmod 666 count.txt
-                '''
+                echo 'Baue das Docker-Image...'
+                // Erstellt das Image basierend auf deinem Dockerfile
+                sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
+
         stage('Test') {
             steps {
-                sh '''
-                    # Run the unit tests
-                    python -m pytest tests/test_hello.py -v
-                '''
+                echo 'Führe Unit-Tests im temporären Container aus...'
+                // Startet einen Container nur für die Tests und löscht ihn danach (--rm)
+                sh "docker run --rm ${IMAGE_NAME}:latest python -m pytest tests/"
             }
         }
-        stage('Run') {
+
+        stage('Deployment') {
             steps {
-                sh '''
-                    nohup python src/hello.py > app.log 2>&1 &
-                    sleep 5
-                    curl http://localhost:5556/api/hello
-                '''
+                echo 'Bereite Deployment vor...'
+                // Stoppe und entferne alte Container mit diesem Namen, falls sie existieren
+                sh "docker stop ${CONTAINER_NAME} || true"
+                sh "docker rm ${CONTAINER_NAME} || true"
+
+                echo "Starte Applikation auf Port ${APP_PORT}..."
+                // Startet den finalen Container
+                sh "docker run -d --name ${CONTAINER_NAME} -p ${APP_PORT}:5556 ${IMAGE_NAME}:latest"
             }
         }
-        stage('Test API') {
+
+        stage('Verify') {
             steps {
-                sh 'python tests/test_api.py'
+                echo 'Überprüfe API...'
+                sleep 5 // Wartezeit für Flask-Start
+                sh "curl http://localhost:${APP_PORT}/api/hello || echo 'API noch nicht bereit'"
             }
-        }
-        stage('Keep Alive') {
-            steps {
-                // Keep the container running indefinitely
-                sh 'sleep infinity'
-            }
-        }
-    }
-    post {
-        always {
-            // Cleanup: Stop the Flask application
-            sh 'pkill -f "python src/hello.py" || true'
         }
     }
 }

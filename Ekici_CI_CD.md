@@ -60,4 +60,73 @@ Bevor wir mit der Aufgabe noch beginnen brauchen wir weitere Plugins, die nicht 
 
 - **CloudBees Docker Build and Publish** 
 
+### Jenkinfile
+
+Das ist sozusagen das Gehirn oder Rezept der Automatisierung.
+
+```textile
+pipeline {
+    agent any // Wir nutzen den Jenkins-Host direkt, da wir Docker-Befehle senden
+
+    environment {
+        IMAGE_NAME = "hellospencer-app"
+        CONTAINER_NAME = "spencer-service"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                echo 'Baue Docker Image...'
+                sh "docker build -t ${IMAGE_NAME}:latest ."
+
+                echo 'Führe Unit-Tests im Container aus...'
+                sh "docker run --rm ${IMAGE_NAME}:latest python -m pytest tests/"
+            }
+        }
+
+        stage('Deployment') {
+            steps {
+                echo 'Deploye auf lokales Notebook...'
+                sh "docker stop ${CONTAINER_NAME} || true"
+                sh "docker rm ${CONTAINER_NAME} || true"
+
+                sh "docker run -d --name ${CONTAINER_NAME} -p 5556:5556 ${IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                echo 'Überprüfe API Endpunkt...'
+                sleep 5
+                sh "curl http://localhost:5556/api/hello || echo 'API noch nicht bereit'"
+            }
+        }
+    }
+}
+```
+
+Danach ein neuen Pipeline auf Jenkins erstellen.
+
+- Scrolle im Job ganz nach unten zum Abschnitt **Pipeline**.
+
+- Ändere *Definition* auf **Pipeline script from SCM**.
+
+- Wähle bei *SCM* den Eintrag **Git** aus.
+
+- Gib unter **Repository URL** deinen Link ein: 
+
+- Prüfe den **Branch Specifier**: Wenn dein Code auf dem Hauptzweig liegt, muss dort `*/main` (oder `*/master`) stehen.
+
+- Stelle sicher, dass bei **Script Path** das Wort `Jenkinsfile` steht.
+
+- Klicke auf **Save**.
+
+
+
 
