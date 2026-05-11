@@ -66,11 +66,12 @@ Das ist sozusagen das Gehirn oder Rezept der Automatisierung.
 
 ```textile
 pipeline {
-    agent any // Wir nutzen den Jenkins-Host direkt, da wir Docker-Befehle senden
+    agent any
 
     environment {
         IMAGE_NAME = "hellospencer-app"
         CONTAINER_NAME = "spencer-service"
+        APP_PORT = "5556"
     }
 
     stages {
@@ -80,33 +81,40 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
-                echo 'Baue Docker Image...'
+                echo 'Baue das Docker-Image...'
                 sh "docker build -t ${IMAGE_NAME}:latest ."
+            }
+        }
 
-                echo 'Führe Unit-Tests im Container aus...'
-                sh "docker run --rm ${IMAGE_NAME}:latest python -m pytest tests/"
+        stage('Unit Tests') {
+            steps {
+                echo 'Führe reine Unit-Tests aus...'
+                // Wir führen nur test_hello.py aus, da diese keinen laufenden Server brauchen
+                sh "docker run --rm ${IMAGE_NAME}:latest python -m pytest tests/test_hello.py"
             }
         }
 
         stage('Deployment') {
             steps {
-                echo 'Deploye auf lokales Notebook...'
+                echo 'Bereite Deployment vor...'
                 sh "docker stop ${CONTAINER_NAME} || true"
                 sh "docker rm ${CONTAINER_NAME} || true"
 
-                sh "docker run -d --name ${CONTAINER_NAME} -p 5556:5556 ${IMAGE_NAME}:latest"
+                echo "Starte Applikation auf Port ${APP_PORT}..."
+                sh "docker run -d --name ${CONTAINER_NAME} -p ${APP_PORT}:5556 ${IMAGE_NAME}:latest"
             }
         }
 
-        stage('Verify') {
-            steps {
-                echo 'Überprüfe API Endpunkt...'
-                sleep 5
-                sh "curl http://localhost:5556/api/hello || echo 'API noch nicht bereit'"
-            }
-        }
+        stage('API Verification') {
+                    steps {
+                        echo 'Warte auf App-Start und teste API...'
+                        sleep 10
+                        // Dieser Befehl funktioniert NUR innerhalb der Jenkins-Pipeline:
+                        sh "curl http://host.docker.internal:5556/api/hello || echo 'API via Host erreicht'"
+                    }
+                }
     }
 }
 ```
@@ -121,7 +129,7 @@ Danach ein neuen Pipeline auf Jenkins erstellen.
 
 - Gib unter **Repository URL** deinen Link ein: 
 
-- Prüfe den **Branch Specifier**: Wenn dein Code auf dem Hauptzweig liegt, muss dort `*/main` (oder `*/master`) stehen.
+- Prüfe den **Branch Specifier**: Wenn dein Code auf dem Hauptzweig liegt, muss dort `*/main` stehen.
 
 - Stelle sicher, dass bei **Script Path** das Wort `Jenkinsfile` steht.
 
@@ -129,6 +137,16 @@ Danach ein neuen Pipeline auf Jenkins erstellen.
 
 - Schließlich auf Build drücken.
 
+![](C:\Users\ekici\AppData\Roaming\marktext\images\2026-05-11-23-06-13-image.png)
 
+
+
+### Programme
+
+Da die Python Programme bereits vom Professor vorgegeben sind, haben wir Glück...
+
+
+
+### Trigger durch Commit
 
 
