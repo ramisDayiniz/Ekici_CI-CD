@@ -8,6 +8,38 @@
 
 In dieser Aufgabe wird CI CD dokumentiert. Wir erstellen ein CI CD Pipeline und lernen die die Umsetzung mit Jenkins.
 
+
+
+# Theorie
+
+### 1. Continuous Integration (CI)
+
+Continuous Integration bezeichnet den Prozess, bei dem Code-Änderungen von Entwicklern **mehrmals täglich** in ein gemeinsames Repository (z. B. GitHub) zusammengeführt werden.
+
+- **Ziel:** Fehler frühzeitig erkennen.
+
+- **Ablauf:** Nach jedem "Push" wird der Code automatisch heruntergeladen, gebaut (Build) und durch **Unit-Tests** geprüft.
+
+### 2. Continuous Deployment (CD)
+
+Continuous Deployment ist die Erweiterung von CI. Hierbei wird jede Code-Änderung, die die Testphase erfolgreich bestanden hat, **automatisch** in die Produktionsumgebung (Deployment) übertragen.
+
+- **Ziel:** Schnelle Bereitstellung neuer Funktionen ohne manuelles Eingreifen.
+
+- **Vorteil:** Minimierung des menschlichen Fehlerrisikos beim Release-Prozess.
+
+### 3. Jenkins: Das Herzstück der Automatisierung
+
+Jenkins ist ein Open-Source-Automatisierungsserver, der als "Orchester-Leiter" fungiert.
+
+- **Pipeline:** Über ein sogenannte **Jenkinsfile** (Pipeline-as-Code) wird genau definiert, welche Schritte (Stages) nacheinander ausgeführt werden sollen.
+
+- **Schnittstelle:** Er verbindet Tools wie **GitHub** (Quellcode), **Docker** (Virtualisierung) und **Pytest** (Testing) zu einem nahtlosen Workflow.
+
+> **Zusammengefasst:** CI/CD mit Jenkins verwandelt manuellen Code in eine automatisierte "Software-Fabrik", die Qualität garantiert und Software sofort einsatzbereit macht.
+
+
+
 # Vorbereitung
 
 - Wie immer Github Repo kopieren...
@@ -148,5 +180,25 @@ Da die Python Programme bereits vom Professor vorgegeben sind, haben wir Glück.
 
 
 ### Trigger durch Commit
+
+Dafür müssen wir den Pipeline konfiguieren. Unter dem Abschnitt Trigger, schalten wir Source Management System anfragen ein. und geben unter Zeitplan 5 Sterne mit Leerzeichen dazwischen, das bedeutet schau jede Minute an.
+
+Wenn man nun bei dem Programm was committed und pushed wird das Pipeline automatisch gebuildet.
+
+![](C:\Users\ekici\AppData\Roaming\marktext\images\2026-05-11-23-20-01-image.png)
+
+
+
+# Quelle
+
+Für Theorie. Gemini
+
+Prompt:
+
+```
+Kannst du ein sehr kurzen Theorieinhalt dazu machen? Also über Jenkin und CI oder CD. 
+```
+
+
 
 
