@@ -127,6 +127,8 @@ Danach ein neuen Pipeline auf Jenkins erstellen.
 
 - Klicke auf **Save**.
 
+- Schließlich auf Build drücken.
+
 
 
 
