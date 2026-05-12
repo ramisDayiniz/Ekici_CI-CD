@@ -33,7 +33,7 @@ class TestHelloSpencer(unittest.TestCase):
         self.assertIn('status', data)
 
         # Test the actual values
-        self.assertEqual(data['message'], 'Hello Spencer - Auto-Build Test')
+        self.assertEqual(data['message'], 'Guten Tag lieber')
         self.assertEqual(data['status'], 'success')
 
 if __name__ == '__main__':
